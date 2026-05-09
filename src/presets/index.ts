@@ -21,6 +21,18 @@ import { rustAxumPreset } from './frameworks/rust-axum.js';
 import { springBootPreset } from './frameworks/spring-boot.js';
 import { svelteSveltekitPreset } from './frameworks/svelte-sveltekit.js';
 import { vueNuxtPreset } from './frameworks/vue-nuxt.js';
+import { drizzlePreset } from './tools/drizzle.js';
+import { eslintPreset } from './tools/eslint.js';
+import { graphqlPreset } from './tools/graphql.js';
+import { prettierPreset } from './tools/prettier.js';
+import { prismaPreset } from './tools/prisma.js';
+import { supabasePreset } from './tools/supabase.js';
+import { tailwindPreset } from './tools/tailwind.js';
+import { tanstackQueryPreset } from './tools/tanstack-query.js';
+import { trpcPreset } from './tools/trpc.js';
+import { typescriptPreset } from './tools/typescript.js';
+import { zodPreset } from './tools/zod.js';
+import { zustandPreset } from './tools/zustand.js';
 
 const registry = new Map<string, Preset>();
 
@@ -55,6 +67,20 @@ register(rustAxumPreset);
 register(laravelPreset);
 register(railsPreset);
 register(springBootPreset);
+
+// Core tools.
+register(typescriptPreset);
+register(tailwindPreset);
+register(prismaPreset);
+register(drizzlePreset);
+register(zodPreset);
+register(eslintPreset);
+register(prettierPreset);
+register(zustandPreset);
+register(tanstackQueryPreset);
+register(trpcPreset);
+register(graphqlPreset);
+register(supabasePreset);
 
 // Frameworks and tools are registered as they land in subsequent commits.
 export function registerPreset(preset: Preset): void {
