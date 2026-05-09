@@ -33,6 +33,15 @@ import { trpcPreset } from './tools/trpc.js';
 import { typescriptPreset } from './tools/typescript.js';
 import { zodPreset } from './tools/zod.js';
 import { zustandPreset } from './tools/zustand.js';
+import { vitestPreset } from './tools/vitest.js';
+import { jestPreset } from './tools/jest.js';
+import { pytestPreset } from './tools/pytest.js';
+import { playwrightPreset } from './tools/playwright.js';
+import { cypressPreset } from './tools/cypress.js';
+import { storybookPreset } from './tools/storybook.js';
+import { dockerPreset } from './tools/docker.js';
+import { turborepoPreset } from './tools/monorepo-turborepo.js';
+import { redisPreset } from './tools/redis.js';
 
 const registry = new Map<string, Preset>();
 
@@ -81,6 +90,17 @@ register(tanstackQueryPreset);
 register(trpcPreset);
 register(graphqlPreset);
 register(supabasePreset);
+
+// Testing + DevOps tools.
+register(vitestPreset);
+register(jestPreset);
+register(pytestPreset);
+register(playwrightPreset);
+register(cypressPreset);
+register(storybookPreset);
+register(dockerPreset);
+register(turborepoPreset);
+register(redisPreset);
 
 // Frameworks and tools are registered as they land in subsequent commits.
 export function registerPreset(preset: Preset): void {
