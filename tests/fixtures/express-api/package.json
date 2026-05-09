@@ -1,0 +1,20 @@
+{
+  "name": "express-fixture",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "helmet": "^8.0.0",
+    "cors": "^2.8.5",
+    "drizzle-orm": "^0.36.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "jest": "^29.7.0",
+    "@types/express": "^5.0.0"
+  }
+}
