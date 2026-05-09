@@ -1,0 +1,64 @@
+{
+  "name": "aiprep",
+  "version": "0.1.0",
+  "description": "Detect your stack, generate battle-tested AI coding rules for every agent in 5 seconds.",
+  "keywords": [
+    "ai",
+    "claude",
+    "cursor",
+    "copilot",
+    "codex",
+    "windsurf",
+    "gemini",
+    "coding-rules",
+    "agents",
+    "CLAUDE.md",
+    "cursorrules",
+    "AGENTS.md",
+    "developer-tools",
+    "cli"
+  ],
+  "bin": {
+    "aiprep": "./dist/cli.js"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "author": "BahaaEldin0 <b.moustafa@nu.edu.eg>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BahaaEldin0/aiprep"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  },
+  "dependencies": {
+    "boxen": "^8.0.1",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "ora": "^9.4.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
