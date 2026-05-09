@@ -1,6 +1,14 @@
 import type { Preset } from '../core/types.js';
 import { basePreset } from './meta/base.js';
 import { strictPreset } from './meta/strict.js';
+import { angularPreset } from './frameworks/angular.js';
+import { astroPreset } from './frameworks/astro.js';
+import { nextjsAppRouterPreset } from './frameworks/nextjs-approuter.js';
+import { nextjsPagesPreset } from './frameworks/nextjs-pages.js';
+import { reactVitePreset } from './frameworks/react-vite.js';
+import { remixPreset } from './frameworks/remix.js';
+import { svelteSveltekitPreset } from './frameworks/svelte-sveltekit.js';
+import { vueNuxtPreset } from './frameworks/vue-nuxt.js';
 
 const registry = new Map<string, Preset>();
 
@@ -11,6 +19,16 @@ function register(preset: Preset): void {
 // Meta — always available.
 register(basePreset);
 register(strictPreset);
+
+// JS/TS frameworks.
+register(nextjsAppRouterPreset);
+register(nextjsPagesPreset);
+register(reactVitePreset);
+register(vueNuxtPreset);
+register(svelteSveltekitPreset);
+register(remixPreset);
+register(astroPreset);
+register(angularPreset);
 
 // Frameworks and tools are registered as they land in subsequent commits.
 export function registerPreset(preset: Preset): void {
