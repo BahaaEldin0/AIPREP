@@ -159,4 +159,21 @@ describe('detectStack orchestrator', () => {
     // Smoke check: orchestrator never throws on a valid directory.
     expect(stack.frameworks).toBeDefined();
   });
+
+  it('detects polyglot monorepo with backend/ Python and frontend/ Node', async () => {
+    const stack = await detectStack(fx('polyglot-monorepo'));
+    expect(stack.runtime).toContain('node');
+    expect(stack.runtime).toContain('python');
+    const fids = stack.frameworks.map((f) => f.id);
+    expect(fids).toContain('fastapi');
+    expect(fids).toContain('react-vite');
+  });
+
+  it('detects turbo-style monorepo with apps/web (Next.js) and apps/api (Express)', async () => {
+    const stack = await detectStack(fx('turbo-monorepo'));
+    expect(stack.runtime).toEqual(['node']);
+    const fids = stack.frameworks.map((f) => f.id);
+    expect(fids).toContain('nextjs-pages'); // no app/ dir in fixture, falls through
+    expect(fids).toContain('express');
+  });
 });
