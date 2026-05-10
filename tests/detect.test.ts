@@ -1,6 +1,8 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { detectStack } from '../src/core/detect.js';
 import { detectNode } from '../src/detectors/node.js';
 import { detectPython } from '../src/detectors/python.js';
@@ -175,5 +177,41 @@ describe('detectStack orchestrator', () => {
     const fids = stack.frameworks.map((f) => f.id);
     expect(fids).toContain('nextjs-pages'); // no app/ dir in fixture, falls through
     expect(fids).toContain('express');
+  });
+
+  it('finds projects under arbitrarily-named subdirs (templates/v3/my-app/)', async () => {
+    const stack = await detectStack(fx('deep-nested'));
+    expect(stack.runtime).toContain('node');
+    expect(stack.frameworks.map((f) => f.id)).toContain('svelte');
+  });
+
+  it('skips node_modules / build / dist / target when walking', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'aiprep-walk-'));
+    try {
+      // Plant manifests inside dirs that MUST be skipped. If the walker
+      // descends into any of them, these frameworks would leak through.
+      for (const dir of ['node_modules/x', 'dist/y', 'build/z', 'target/q', 'vendor/v']) {
+        const sub = join(tmp, dir);
+        mkdirSync(sub, { recursive: true });
+        writeFileSync(
+          join(sub, 'package.json'),
+          JSON.stringify({ name: dir, dependencies: { fastify: '^5.0.0' } }),
+        );
+      }
+      // And a real project that SHOULD be found.
+      const real = join(tmp, 'apps', 'web');
+      mkdirSync(real, { recursive: true });
+      writeFileSync(
+        join(real, 'package.json'),
+        JSON.stringify({ name: 'web', dependencies: { express: '^4.21.0' } }),
+      );
+
+      const stack = await detectStack(tmp);
+      const fids = stack.frameworks.map((f) => f.id);
+      expect(fids).toContain('express');
+      expect(fids).not.toContain('fastify');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
