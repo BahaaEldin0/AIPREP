@@ -1,8 +1,12 @@
 // Core types for aiprep — public API surface.
 
 export interface DetectedStack {
-  /** e.g., "node", "python", "go", "rust", "php", "ruby", "java", "unknown" */
-  runtime: string;
+  /**
+   * Detected language runtimes, in detection order. Polyglot projects (e.g.
+   * Django backend + JS frontend in a monorepo) surface every runtime found.
+   * Empty / `['unknown']` when nothing detected.
+   */
+  runtime: string[];
   /** e.g., "pnpm", "npm", "yarn", "bun", "pip", "poetry", "composer", "bundler", "maven", "gradle" */
   packageManager?: string;
   /** Detected frameworks with version hints. */
@@ -106,6 +110,11 @@ export interface GenerateResult {
   skippedFiles: string[];
   /** Per-format generated content (always populated, even on dry run). */
   contents: Record<AgentFormat, string>;
+  /**
+   * Non-fatal user-facing warnings (e.g. "marker missing, backed up to X").
+   * Empty array when nothing to surface.
+   */
+  warnings: string[];
 }
 
 export interface WrittenFile {

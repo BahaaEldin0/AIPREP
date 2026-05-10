@@ -2,6 +2,14 @@ import type { DetectedStack, Rule, RuleCategory } from '../core/types.js';
 
 export const CUSTOM_MARKER = '<!-- Custom rules below this line will be preserved on regeneration -->';
 
+/**
+ * Match the marker only when it occupies a whole line (start-of-line +
+ * newline-or-EOF). Substring matching would falsely fire on the marker
+ * text appearing inside a fenced code block in the user's preserved section.
+ */
+export const CUSTOM_MARKER_RE =
+  /^<!-- Custom rules below this line will be preserved on regeneration -->(?:\r?\n|$)/m;
+
 const CATEGORY_TITLES: Record<RuleCategory, string> = {
   architecture: 'Architecture',
   conventions: 'Conventions',
@@ -19,7 +27,8 @@ export function categoryTitle(c: RuleCategory): string {
 
 export function stackSummary(stack: DetectedStack): string {
   const parts: string[] = [];
-  if (stack.runtime && stack.runtime !== 'unknown') parts.push(stack.runtime);
+  const runtimes = stack.runtime.filter((r) => r && r !== 'unknown');
+  if (runtimes.length) parts.push(runtimes.join(' + '));
   for (const f of stack.frameworks) {
     parts.push(f.version ? `${f.name} ${f.version}` : f.name);
   }
@@ -57,13 +66,35 @@ export function renderStructure(structure: string[]): string {
 }
 
 export function appendCustomBlock(content: string, existing: string | null): string {
+  return mergeWithMarker(content, existing).result;
+}
+
+export interface MergeResult {
+  result: string;
+  /**
+   * True when `existing` had non-empty content but no preservation marker —
+   * caller should back up the prior file before overwriting.
+   */
+  backupRequired: boolean;
+}
+
+export function mergeWithMarker(content: string, existing: string | null): MergeResult {
   const trimmed = content.replace(/\s+$/, '');
+  const fresh = `${trimmed}\n\n${CUSTOM_MARKER}\n`;
+
   if (!existing) {
-    return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
+    return { result: fresh, backupRequired: false };
   }
-  const idx = existing.indexOf(CUSTOM_MARKER);
-  if (idx === -1) return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
-  const custom = existing.slice(idx + CUSTOM_MARKER.length).replace(/^\n+/, '');
-  if (!custom.trim()) return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
-  return `${trimmed}\n\n${CUSTOM_MARKER}\n${custom}`;
+
+  const match = CUSTOM_MARKER_RE.exec(existing);
+  if (!match) {
+    // Missing marker on a non-empty file: caller must back up before overwriting.
+    return { result: fresh, backupRequired: existing.trim().length > 0 };
+  }
+
+  const custom = existing.slice(match.index + CUSTOM_MARKER.length).replace(/^\n+/, '');
+  if (!custom.trim()) {
+    return { result: fresh, backupRequired: false };
+  }
+  return { result: `${trimmed}\n\n${CUSTOM_MARKER}\n${custom}`, backupRequired: false };
 }

@@ -10,7 +10,7 @@ import { getAllPresets } from './presets/index.js';
 import { AGENT_FILE_PATHS, AGENT_LABELS } from './formatters/index.js';
 import type { AgentFormat } from './core/types.js';
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 
 function banner(): string {
   return boxen(
@@ -80,12 +80,13 @@ program
     detectSpinner.succeed(chalk.bold('Detected:'));
 
     const detected: { label: string; meta?: string }[] = [];
-    if (stack.runtime !== 'unknown') {
+    const runtimes = stack.runtime.filter((r) => r !== 'unknown');
+    runtimes.forEach((rt, i) => {
       detected.push({
-        label: stack.runtime,
-        meta: stack.packageManager ? `${stack.packageManager}` : undefined,
+        label: rt,
+        meta: i === 0 && stack.packageManager ? stack.packageManager : undefined,
       });
-    }
+    });
     for (const f of stack.frameworks) {
       detected.push({ label: f.name, meta: f.version });
     }
@@ -151,6 +152,13 @@ program
         console.log(
           `  ${chalk.yellow('!')} ${chalk.cyan(sf.padEnd(40))} ${chalk.dim('(exists; rerun with --force to overwrite)')}`,
         );
+      }
+    }
+
+    if (result.warnings.length > 0) {
+      console.log('');
+      for (const w of result.warnings) {
+        console.log(`  ${chalk.yellow('⚠')}  ${chalk.yellow(w)}`);
       }
     }
 

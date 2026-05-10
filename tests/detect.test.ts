@@ -63,6 +63,13 @@ describe('detectNode', () => {
     const r = await detectNode(fx('go-api'));
     expect(r).toBeNull();
   });
+
+  it('detects plain Svelte (no SvelteKit) as id="svelte"', async () => {
+    const r = await detectNode(fx('svelte-only'));
+    const ids = r!.frameworks.map((f) => f.id);
+    expect(ids).toContain('svelte');
+    expect(ids).not.toContain('svelte-sveltekit');
+  });
 });
 
 describe('detectPython', () => {
@@ -71,6 +78,14 @@ describe('detectPython', () => {
     expect(r).not.toBeNull();
     expect(r!.frameworks.map((f) => f.id)).toContain('fastapi');
     expect(r!.tools.map((t) => t.id)).toContain('pytest');
+  });
+
+  it('extracts version strings from python deps (PEP 621 + poetry)', async () => {
+    const r = await detectPython(fx('python-fastapi'));
+    const fastapi = r!.frameworks.find((f) => f.id === 'fastapi');
+    expect(fastapi?.version).toBe('0.115.0');
+    const pytest = r!.tools.find((t) => t.id === 'pytest');
+    expect(pytest?.version).toBe('8.0');
   });
 
   it('returns null when no python manifest exists', async () => {
@@ -124,7 +139,7 @@ describe('detectJava', () => {
 describe('detectStack orchestrator', () => {
   it('produces a complete DetectedStack for the Next.js fixture', async () => {
     const stack = await detectStack(fx('nextjs-app'));
-    expect(stack.runtime).toBe('node');
+    expect(stack.runtime).toEqual(['node']);
     expect(stack.packageManager).toBe('pnpm');
     expect(stack.frameworks.length).toBeGreaterThan(0);
     expect(stack.tools.length).toBeGreaterThan(2);
@@ -134,14 +149,31 @@ describe('detectStack orchestrator', () => {
 
   it('produces a stack for Laravel fixture without a Node runtime', async () => {
     const stack = await detectStack(fx('laravel-app'));
-    expect(stack.runtime).toBe('php');
+    expect(stack.runtime).toEqual(['php']);
     expect(stack.frameworks.map((f) => f.id)).toContain('laravel');
   });
 
   it('returns runtime=unknown on an empty directory', async () => {
     const stack = await detectStack(fx('rails-app'));
-    expect(stack.runtime).toBe('ruby');
+    expect(stack.runtime).toEqual(['ruby']);
     // Smoke check: orchestrator never throws on a valid directory.
     expect(stack.frameworks).toBeDefined();
+  });
+
+  it('detects polyglot monorepo with backend/ Python and frontend/ Node', async () => {
+    const stack = await detectStack(fx('polyglot-monorepo'));
+    expect(stack.runtime).toContain('node');
+    expect(stack.runtime).toContain('python');
+    const fids = stack.frameworks.map((f) => f.id);
+    expect(fids).toContain('fastapi');
+    expect(fids).toContain('react-vite');
+  });
+
+  it('detects turbo-style monorepo with apps/web (Next.js) and apps/api (Express)', async () => {
+    const stack = await detectStack(fx('turbo-monorepo'));
+    expect(stack.runtime).toEqual(['node']);
+    const fids = stack.frameworks.map((f) => f.id);
+    expect(fids).toContain('nextjs-pages'); // no app/ dir in fixture, falls through
+    expect(fids).toContain('express');
   });
 });
