@@ -10,7 +10,7 @@ import { getAllPresets } from './presets/index.js';
 import { AGENT_FILE_PATHS, AGENT_LABELS } from './formatters/index.js';
 import type { AgentFormat } from './core/types.js';
 
-const VERSION = '0.2.0';
+const VERSION = '0.1.0';
 
 function banner(): string {
   return boxen(
