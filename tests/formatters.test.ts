@@ -114,6 +114,26 @@ describe('appendCustomBlock — preservation', () => {
     expect(result).toContain(CUSTOM_MARKER);
     expect(result).not.toContain('# something else');
   });
+
+  it('does not match marker when run inline with other text (line-anchored)', () => {
+    // Marker must be at the start of a line and followed by newline-or-EOF.
+    // The pre-fix substring `indexOf` would have matched here and treated
+    // "and-more" as preserved custom content.
+    const inline = '# old\n\nprefix <!-- Custom rules below this line will be preserved on regeneration --> and-more\ntail';
+    const result = appendCustomBlock('# new', inline);
+    expect(result).not.toContain('and-more');
+    expect(result).not.toContain('tail');
+    expect(result).toContain(CUSTOM_MARKER);
+  });
+
+  it('matches marker followed by EOF (no trailing newline)', () => {
+    const existing = `# old\n\n${CUSTOM_MARKER}`;
+    const result = appendCustomBlock('# new', existing);
+    expect(result).toContain('# new');
+    expect(result).toContain(CUSTOM_MARKER);
+    // Trailing-EOF marker with no body below it -> still treated as preserved-empty.
+    expect(result).not.toContain('# old');
+  });
 });
 
 describe('generate() integration', () => {

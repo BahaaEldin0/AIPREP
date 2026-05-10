@@ -2,6 +2,14 @@ import type { DetectedStack, Rule, RuleCategory } from '../core/types.js';
 
 export const CUSTOM_MARKER = '<!-- Custom rules below this line will be preserved on regeneration -->';
 
+/**
+ * Match the marker only when it occupies a whole line (start-of-line +
+ * newline-or-EOF). Substring matching would falsely fire on the marker
+ * text appearing inside a fenced code block in the user's preserved section.
+ */
+export const CUSTOM_MARKER_RE =
+  /^<!-- Custom rules below this line will be preserved on regeneration -->(?:\r?\n|$)/m;
+
 const CATEGORY_TITLES: Record<RuleCategory, string> = {
   architecture: 'Architecture',
   conventions: 'Conventions',
@@ -62,9 +70,9 @@ export function appendCustomBlock(content: string, existing: string | null): str
   if (!existing) {
     return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
   }
-  const idx = existing.indexOf(CUSTOM_MARKER);
-  if (idx === -1) return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
-  const custom = existing.slice(idx + CUSTOM_MARKER.length).replace(/^\n+/, '');
+  const match = CUSTOM_MARKER_RE.exec(existing);
+  if (!match) return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
+  const custom = existing.slice(match.index + CUSTOM_MARKER.length).replace(/^\n+/, '');
   if (!custom.trim()) return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
   return `${trimmed}\n\n${CUSTOM_MARKER}\n${custom}`;
 }
