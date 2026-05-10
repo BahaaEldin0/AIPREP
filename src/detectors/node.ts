@@ -77,8 +77,8 @@ export async function detectNode(cwd: string): Promise<{
     frameworks.push(makeItem('astro', 'Astro', pickVersion(deps, 'astro')));
   }
 
-  // SvelteKit / Svelte
-  if (has('@sveltejs/kit') || has('svelte')) {
+  // SvelteKit (full meta-framework) vs plain Svelte (component library only).
+  if (has('@sveltejs/kit')) {
     frameworks.push(
       makeItem(
         'svelte-sveltekit',
@@ -86,6 +86,8 @@ export async function detectNode(cwd: string): Promise<{
         pickVersion(deps, '@sveltejs/kit') ?? pickVersion(deps, 'svelte'),
       ),
     );
+  } else if (has('svelte')) {
+    frameworks.push(makeItem('svelte', 'Svelte', pickVersion(deps, 'svelte')));
   }
 
   // Vue / Nuxt

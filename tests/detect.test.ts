@@ -63,6 +63,13 @@ describe('detectNode', () => {
     const r = await detectNode(fx('go-api'));
     expect(r).toBeNull();
   });
+
+  it('detects plain Svelte (no SvelteKit) as id="svelte"', async () => {
+    const r = await detectNode(fx('svelte-only'));
+    const ids = r!.frameworks.map((f) => f.id);
+    expect(ids).toContain('svelte');
+    expect(ids).not.toContain('svelte-sveltekit');
+  });
 });
 
 describe('detectPython', () => {
