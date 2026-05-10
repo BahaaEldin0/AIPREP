@@ -80,6 +80,14 @@ describe('detectPython', () => {
     expect(r!.tools.map((t) => t.id)).toContain('pytest');
   });
 
+  it('extracts version strings from python deps (PEP 621 + poetry)', async () => {
+    const r = await detectPython(fx('python-fastapi'));
+    const fastapi = r!.frameworks.find((f) => f.id === 'fastapi');
+    expect(fastapi?.version).toBe('0.115.0');
+    const pytest = r!.tools.find((t) => t.id === 'pytest');
+    expect(pytest?.version).toBe('8.0');
+  });
+
   it('returns null when no python manifest exists', async () => {
     const r = await detectPython(fx('nextjs-app'));
     expect(r).toBeNull();
