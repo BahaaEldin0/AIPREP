@@ -124,7 +124,7 @@ describe('detectJava', () => {
 describe('detectStack orchestrator', () => {
   it('produces a complete DetectedStack for the Next.js fixture', async () => {
     const stack = await detectStack(fx('nextjs-app'));
-    expect(stack.runtime).toBe('node');
+    expect(stack.runtime).toEqual(['node']);
     expect(stack.packageManager).toBe('pnpm');
     expect(stack.frameworks.length).toBeGreaterThan(0);
     expect(stack.tools.length).toBeGreaterThan(2);
@@ -134,13 +134,13 @@ describe('detectStack orchestrator', () => {
 
   it('produces a stack for Laravel fixture without a Node runtime', async () => {
     const stack = await detectStack(fx('laravel-app'));
-    expect(stack.runtime).toBe('php');
+    expect(stack.runtime).toEqual(['php']);
     expect(stack.frameworks.map((f) => f.id)).toContain('laravel');
   });
 
   it('returns runtime=unknown on an empty directory', async () => {
     const stack = await detectStack(fx('rails-app'));
-    expect(stack.runtime).toBe('ruby');
+    expect(stack.runtime).toEqual(['ruby']);
     // Smoke check: orchestrator never throws on a valid directory.
     expect(stack.frameworks).toBeDefined();
   });

@@ -19,7 +19,8 @@ export function categoryTitle(c: RuleCategory): string {
 
 export function stackSummary(stack: DetectedStack): string {
   const parts: string[] = [];
-  if (stack.runtime && stack.runtime !== 'unknown') parts.push(stack.runtime);
+  const runtimes = stack.runtime.filter((r) => r && r !== 'unknown');
+  if (runtimes.length) parts.push(runtimes.join(' + '));
   for (const f of stack.frameworks) {
     parts.push(f.version ? `${f.name} ${f.version}` : f.name);
   }

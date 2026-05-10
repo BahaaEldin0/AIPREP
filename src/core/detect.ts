@@ -23,13 +23,19 @@ export async function detectStack(cwd: string): Promise<DetectedStack> {
     detectGeneric(cwd),
   ]);
 
-  const primary = node ?? python ?? go ?? rust ?? php ?? ruby ?? java;
+  const orderedDetectors = [node, python, go, rust, php, ruby, java] as const;
+  const primary = orderedDetectors.find((d) => d !== null) ?? null;
+
+  const runtimes: string[] = [];
+  for (const d of orderedDetectors) {
+    if (d && !runtimes.includes(d.runtime)) runtimes.push(d.runtime);
+  }
 
   const frameworks: DetectedItem[] = [];
   const tools: DetectedItem[] = [];
   const seen = new Set<string>();
 
-  for (const detector of [node, python, go, rust, php, ruby, java]) {
+  for (const detector of orderedDetectors) {
     if (!detector) continue;
     for (const f of detector.frameworks) {
       if (!seen.has(`f:${f.id}`)) {
@@ -57,7 +63,7 @@ export async function detectStack(cwd: string): Promise<DetectedStack> {
   const projectName = (node?.project.name ?? '') || basename(cwd);
 
   return {
-    runtime: primary?.runtime ?? 'unknown',
+    runtime: runtimes.length > 0 ? runtimes : ['unknown'],
     packageManager: primary?.packageManager,
     frameworks,
     tools,

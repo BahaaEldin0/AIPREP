@@ -4,7 +4,7 @@ import type { DetectedStack } from '../src/core/types.js';
 
 function stackOf(frameworks: string[], tools: string[] = []): DetectedStack {
   return {
-    runtime: 'node',
+    runtime: ['node'],
     packageManager: 'pnpm',
     frameworks: frameworks.map((id) => ({ id, name: id, confidence: 1 })),
     tools: tools.map((id) => ({ id, name: id, confidence: 1 })),

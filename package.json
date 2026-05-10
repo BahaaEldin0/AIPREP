@@ -1,6 +1,6 @@
 {
   "name": "aiprep",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Detect your stack, generate battle-tested AI coding rules for every agent in 5 seconds.",
   "keywords": [
     "ai",

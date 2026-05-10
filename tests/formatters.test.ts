@@ -30,7 +30,7 @@ const fx = (name: string): string => resolve(__dirname, 'fixtures', name);
 
 function sampleStack(): DetectedStack {
   return {
-    runtime: 'node',
+    runtime: ['node'],
     packageManager: 'pnpm',
     frameworks: [{ id: 'express', name: 'Express', version: '4.21.0', confidence: 1 }],
     tools: [{ id: 'typescript', name: 'TypeScript', version: '5.6.3', confidence: 1 }],
