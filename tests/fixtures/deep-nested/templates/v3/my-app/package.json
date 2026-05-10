@@ -1,0 +1,8 @@
+{
+  "name": "deep-nested-svelte",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "svelte": "^5.0.0"
+  }
+}
