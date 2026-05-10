@@ -66,13 +66,35 @@ export function renderStructure(structure: string[]): string {
 }
 
 export function appendCustomBlock(content: string, existing: string | null): string {
+  return mergeWithMarker(content, existing).result;
+}
+
+export interface MergeResult {
+  result: string;
+  /**
+   * True when `existing` had non-empty content but no preservation marker —
+   * caller should back up the prior file before overwriting.
+   */
+  backupRequired: boolean;
+}
+
+export function mergeWithMarker(content: string, existing: string | null): MergeResult {
   const trimmed = content.replace(/\s+$/, '');
+  const fresh = `${trimmed}\n\n${CUSTOM_MARKER}\n`;
+
   if (!existing) {
-    return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
+    return { result: fresh, backupRequired: false };
   }
+
   const match = CUSTOM_MARKER_RE.exec(existing);
-  if (!match) return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
+  if (!match) {
+    // Missing marker on a non-empty file: caller must back up before overwriting.
+    return { result: fresh, backupRequired: existing.trim().length > 0 };
+  }
+
   const custom = existing.slice(match.index + CUSTOM_MARKER.length).replace(/^\n+/, '');
-  if (!custom.trim()) return `${trimmed}\n\n${CUSTOM_MARKER}\n`;
-  return `${trimmed}\n\n${CUSTOM_MARKER}\n${custom}`;
+  if (!custom.trim()) {
+    return { result: fresh, backupRequired: false };
+  }
+  return { result: `${trimmed}\n\n${CUSTOM_MARKER}\n${custom}`, backupRequired: false };
 }

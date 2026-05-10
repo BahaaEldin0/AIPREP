@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
   AGENT_FILE_PATHS,
@@ -6,7 +6,7 @@ import {
   getAllFormats,
   getFormatter,
 } from '../formatters/index.js';
-import { appendCustomBlock } from '../formatters/shared.js';
+import { mergeWithMarker } from '../formatters/shared.js';
 import { buildIdList, composeFromIds } from './compose.js';
 import { detectStack } from './detect.js';
 import type {
@@ -31,6 +31,7 @@ export async function generate(options: GenerateOptions = {}): Promise<GenerateR
   const contents = {} as Record<AgentFormat, string>;
   const writtenFiles: WrittenFile[] = [];
   const skippedFiles: string[] = [];
+  const warnings: string[] = [];
 
   for (const format of formats) {
     const fn = getFormatter(format);
@@ -42,7 +43,18 @@ export async function generate(options: GenerateOptions = {}): Promise<GenerateR
 
     if (FORMATS_WITH_PRESERVATION.includes(format)) {
       const existing = existsSync(absPath) ? readFileSync(absPath, 'utf8') : null;
-      body = appendCustomBlock(body, existing);
+      const merged = mergeWithMarker(body, existing);
+      body = merged.result;
+
+      if (merged.backupRequired) {
+        const backupPath = `${absPath}.bak.${Date.now()}`;
+        if (!options.dryRun) {
+          copyFileSync(absPath, backupPath);
+        }
+        warnings.push(
+          `${relPath}: preservation marker missing — prior content backed up to ${relPath}.bak.<timestamp>`,
+        );
+      }
     }
 
     contents[format] = body;
@@ -76,5 +88,6 @@ export async function generate(options: GenerateOptions = {}): Promise<GenerateR
     writtenFiles,
     skippedFiles,
     contents,
+    warnings,
   };
 }

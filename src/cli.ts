@@ -155,6 +155,13 @@ program
       }
     }
 
+    if (result.warnings.length > 0) {
+      console.log('');
+      for (const w of result.warnings) {
+        console.log(`  ${chalk.yellow('⚠')}  ${chalk.yellow(w)}`);
+      }
+    }
+
     const ruleCount = Object.values(result.contents).reduce(
       (acc, c) => acc + (c ? c.split('\n').filter((l) => l.startsWith('- ')).length : 0),
       0,

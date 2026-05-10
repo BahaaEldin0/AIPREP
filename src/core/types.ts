@@ -110,6 +110,11 @@ export interface GenerateResult {
   skippedFiles: string[];
   /** Per-format generated content (always populated, even on dry run). */
   contents: Record<AgentFormat, string>;
+  /**
+   * Non-fatal user-facing warnings (e.g. "marker missing, backed up to X").
+   * Empty array when nothing to surface.
+   */
+  warnings: string[];
 }
 
 export interface WrittenFile {

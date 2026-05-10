@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -14,7 +14,7 @@ import {
   formatGemini,
   formatWindsurf,
 } from '../src/formatters/agents.js';
-import { CUSTOM_MARKER, appendCustomBlock } from '../src/formatters/shared.js';
+import { CUSTOM_MARKER, appendCustomBlock, mergeWithMarker } from '../src/formatters/shared.js';
 import type { DetectedStack } from '../src/core/types.js';
 
 // Re-export the formatters via the index — actual import:
@@ -108,11 +108,23 @@ describe('appendCustomBlock — preservation', () => {
     expect(result).not.toContain('# old');
   });
 
-  it('handles existing file without marker (treats as fresh)', () => {
+  it('handles existing file without marker (signals backupRequired)', () => {
     const existing = '# something else without marker';
-    const result = appendCustomBlock('# new', existing);
-    expect(result).toContain(CUSTOM_MARKER);
-    expect(result).not.toContain('# something else');
+    const merged = mergeWithMarker('# new', existing);
+    expect(merged.result).toContain(CUSTOM_MARKER);
+    expect(merged.result).not.toContain('# something else');
+    expect(merged.backupRequired).toBe(true);
+  });
+
+  it('does not signal backupRequired when existing file is empty', () => {
+    const merged = mergeWithMarker('# new', '   \n  ');
+    expect(merged.backupRequired).toBe(false);
+  });
+
+  it('does not signal backupRequired when marker is present', () => {
+    const existing = `# old\n\n${CUSTOM_MARKER}\n`;
+    const merged = mergeWithMarker('# new', existing);
+    expect(merged.backupRequired).toBe(false);
   });
 
   it('does not match marker when run inline with other text (line-anchored)', () => {
@@ -215,6 +227,36 @@ describe('generate() integration', () => {
     const afterForce = readFileSync(join(tmp, '.windsurfrules'), 'utf8');
     expect(afterForce).not.toBe('TAINTED');
     expect(afterForce.length).toBeGreaterThan(first.length / 2);
+  });
+
+  it('backs up CLAUDE.md and surfaces a warning when marker is missing', async () => {
+    // Pre-write a CLAUDE.md without the preservation marker.
+    writeFileSync(
+      join(tmp, 'CLAUDE.md'),
+      '# user-managed content\n\n- some custom rule the user wrote',
+      'utf8',
+    );
+
+    const result = await generate({ cwd: tmp, agents: ['claude'] });
+
+    // Backup file with .bak.<ts> suffix exists.
+    const backups = readdirSync(tmp).filter((n) => n.startsWith('CLAUDE.md.bak.'));
+    expect(backups.length).toBe(1);
+    expect(readFileSync(join(tmp, backups[0]!), 'utf8')).toContain(
+      'some custom rule the user wrote',
+    );
+
+    // CLAUDE.md is regenerated and warning is surfaced.
+    expect(result.warnings.length).toBe(1);
+    expect(result.warnings[0]).toContain('CLAUDE.md');
+    expect(result.warnings[0]).toMatch(/marker missing/i);
+
+    // dry-run path should warn but NOT write a backup.
+    rmSync(join(tmp, backups[0]!));
+    writeFileSync(join(tmp, 'CLAUDE.md'), '# unmarked again', 'utf8');
+    const dryResult = await generate({ cwd: tmp, agents: ['claude'], dryRun: true });
+    expect(dryResult.warnings.length).toBe(1);
+    expect(readdirSync(tmp).filter((n) => n.startsWith('CLAUDE.md.bak.')).length).toBe(0);
   });
 
   it('--presets override skips detection and applies given preset list', async () => {
